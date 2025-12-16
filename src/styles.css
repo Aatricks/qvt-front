@@ -1,225 +1,76 @@
-:root {
-    --bg: #f6f8fb;
-    --card: #ffffff;
-    --muted: #6b7280;
-    --text: #0f172a;
-    --border: #e5e7eb;
-    --shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --radius: 12px;
-    --primary: #2563eb;
-    --primary-ink: #ffffff;
-    --danger: #b91c1c;
-    --warn: #f59e0b;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
 
-* {
-    box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-    height: 100%;
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue,
-        Arial;
-    font-size: 14px;
-    line-height: 1.45;
-}
-
-a {
-    color: inherit;
-    text-decoration: none;
-}
-
-.container {
-    max-width: 1140px;
-    margin: 24px auto;
-    padding: 0 16px;
-}
-
-.card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-}
-
-.grid {
-    display: grid;
-    gap: 16px;
-}
-
-.grid.cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 960px) {
-    .grid.cols-2 {
-        grid-template-columns: 1fr;
-    }
-}
-
-.hstack {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.vstack {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.small {
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    color: var(--muted);
-    background: #fafafa;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 9px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: #fff;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.btn:hover {
-    border-color: #cbd5e1;
-}
-
-.btn.primary {
-    background: var(--primary);
-    color: var(--primary-ink);
-    border-color: #1d4ed8;
-}
-
-.btn.primary:hover {
-    background: #1d4ed8;
-}
-
-.btn.danger {
-    border-color: #fecaca;
-    color: #991b1b;
-    background: #fff5f5;
-}
-
-.input {
-    width: 100%;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    padding: 9px 10px;
-    background: #fff;
-}
-
-textarea.input {
-    min-height: 120px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        Liberation Mono, Courier New, monospace;
-    font-size: 12px;
-}
-
-.nav {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid var(--border);
-    background: rgba(246, 248, 251, 0.85);
-    backdrop-filter: blur(8px);
-}
-
-.nav-inner {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.nav-title {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-}
-
-.nav-title strong {
-    font-size: 14px;
-}
-
-.nav-links {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.nav-link {
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    color: var(--muted);
-    font-weight: 600;
-}
-
-.nav-link:hover {
-    background: #fff;
-    border-color: var(--border);
-    color: var(--text);
-}
-
-.nav-link.active {
-    background: #fff;
-    border-color: #cbd5e1;
-    color: var(--text);
-}
-
-.vega-viewer,
-.vega-viewer .vega-embed {
-    width: 100%;
-}
-
-/* Guard against collapsed renders (e.g. actions menu visible but plot area is 0px tall) */
-.vega-viewer {
-    min-height: 260px;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-
-.vega-viewer .vega-embed {
-    min-height: 260px;
-}
-
-.vega-viewer canvas,
-.vega-viewer svg {
-    display: block;
-}
-
-.error {
-    border: 1px solid #fecaca;
-    background: #fff5f5;
-    color: #7f1d1d;
-    border-radius: 10px;
-    padding: 10px;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

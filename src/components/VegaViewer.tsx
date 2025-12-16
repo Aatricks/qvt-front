@@ -44,9 +44,9 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
         const msg = e instanceof Error ? e.message : String(e);
         const hint =
           msg.includes('Make sure the specification includes')
-            ? '<div class="small" style="margin-top:6px">Astuce: vérifiez que vous passez bien un spec Vega-Lite (avec <code>$schema</code> et <code>mark</code>), pas le wrapper <code>{chart_key, generated_at, spec}</code>.</div>'
+            ? '<div class="text-xs text-muted-foreground mt-2">Astuce: vérifiez que vous passez bien un spec Vega-Lite (avec <code>$schema</code> et <code>mark</code>), pas le wrapper <code>{chart_key, generated_at, spec}</code>.</div>'
             : '';
-        containerRef.current.innerHTML = `<div class="error">Render error: ${escapeHtml(msg)}${hint}</div>`;
+        containerRef.current.innerHTML = `<div class="rounded-md bg-destructive/15 p-3 text-sm text-destructive">Render error: ${escapeHtml(msg)}${hint}</div>`;
       }
     }
 
@@ -65,7 +65,7 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
     };
   }, [resolvedSpec, options]);
 
-  return <div className="vega-viewer" ref={containerRef} />;
+  return <div className="w-full overflow-x-auto min-h-[260px]" ref={containerRef} />;
 }
 
 function escapeHtml(text: string) {

@@ -1,29 +1,45 @@
 import { NavLink } from 'react-router-dom';
-
 import { DatasetStatus } from './DatasetStatus';
+import { cn } from '@/lib/utils';
+import { LayoutDashboard, Users, UserCheck } from 'lucide-react';
 
 export function Navbar() {
-  return (
-    <header className="nav">
-      <div className="nav-inner">
-        <div className="nav-title">
-          <strong>QVCTi</strong>
-          <span className="small">Diagnostics & actions (CSV → FastAPI → Vega-Lite)</span>
-        </div>
+  const navItems = [
+    { to: "/employee", label: "Employé", icon: UserCheck },
+    { to: "/manager", label: "Manager", icon: Users },
+    { to: "/hr", label: "RH", icon: LayoutDashboard },
+  ];
 
-        <nav className="nav-links" aria-label="Navigation">
-          <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/employee">
-            Employé
-          </NavLink>
-          <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/manager">
-            Manager
-          </NavLink>
-          <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} to="/hr">
-            RH
-          </NavLink>
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 flex flex-col">
+          <a className="mr-6 flex items-center space-x-2" href="/">
+            <span className="hidden font-bold sm:inline-block">QVCTi</span>
+          </a>
+        </div>
+        
+        <nav className="flex items-center space-x-6 text-sm font-medium">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  "transition-colors hover:text-foreground/80 flex items-center gap-2",
+                  isActive ? "text-foreground" : "text-foreground/60"
+                )
+              }
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
 
-        <DatasetStatus />
+        <div className="ml-auto flex items-center space-x-4">
+          <DatasetStatus />
+        </div>
       </div>
     </header>
   );

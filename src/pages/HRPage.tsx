@@ -2,10 +2,24 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ChartCard } from '../components/ChartCard';
 import { FilePicker } from '../components/FilePicker';
+import { FilterBuilder } from '../components/FilterBuilder';
 import { useDataset } from '../context/DatasetContext';
 import { getSupportedKeys, visualize } from '../lib/api';
 import type { ChartSpec } from '../lib/types';
 import { VisualizeError } from '../lib/types';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, AlertCircle, Info, Play } from 'lucide-react';
+
+// Add Label component locally if not present or just use simple label
+const SimpleLabel = ({ className, children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => (
+    <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`} {...props}>
+        {children}
+    </label>
+);
+
 
 type RenderState = {
   status: 'idle' | 'loading' | 'success' | 'error';
@@ -51,21 +65,17 @@ export function HRPage() {
     'importance_performance_matrix',
   ]);
 
-  const [filtersText, setFiltersText] = useState<string>('{}');
-  const [configText, setConfigText] = useState<string>(
-    JSON.stringify(
-      {
-        min_n: 5,
-        outcome: 'EPUI',
-        method: 'spearman',
-        top_n: 12,
-        focus: 'lowest',
-        sort: 'net_agreement',
-      },
-      null,
-      2,
-    ),
-  );
+  const [dynamicFilters, setDynamicFilters] = useState<Record<string, any>>({});
+
+  // Default config hidden from user
+  const defaultConfig = {
+    min_n: 5,
+    outcome: 'EPUI',
+    method: 'spearman',
+    top_n: 12,
+    focus: 'lowest',
+    sort: 'net_agreement',
+  };
 
   const [renderByKey, setRenderByKey] = useState<Record<string, RenderState>>({});
 
@@ -111,23 +121,6 @@ export function HRPage() {
   async function runRender() {
     if (!file) return;
 
-    let filters: Record<string, unknown> | null = null;
-    let config: Record<string, unknown> | null = null;
-
-    try {
-      filters = parseJsonObject(filtersText);
-    } catch (e) {
-      setKeysError(`Filters JSON invalid: ${e instanceof Error ? e.message : String(e)}`);
-      return;
-    }
-
-    try {
-      config = parseJsonObject(configText);
-    } catch (e) {
-      setKeysError(`Config JSON invalid: ${e instanceof Error ? e.message : String(e)}`);
-      return;
-    }
-
     const keys = selectedKeys.filter((k) => supportedKeys?.includes(k));
 
     // init render states
@@ -144,7 +137,7 @@ export function HRPage() {
       const k = keys[idx++];
       if (!k) return;
       try {
-        const spec = await visualize(k, { hrFile: file, config, filters });
+        const spec = await visualize(k, { hrFile: file, config: defaultConfig, filters: dynamicFilters });
         setRenderByKey((prev) => ({ ...prev, [k]: { status: 'success', spec, error: null } }));
       } catch (e) {
         setRenderByKey((prev) => ({
@@ -159,96 +152,89 @@ export function HRPage() {
   }
 
   return (
-    <div className="vstack">
-      <div className="card vstack">
-        <strong>RH (exploration complète)</strong>
-        <span className="small">
-          Ici vous pouvez choisir quelles visualisations lancer, et passer des <code>filters</code>/<code>config</code> JSON à l’API.
-        </span>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">RH (exploration complète)</h1>
+        <p className="text-muted-foreground">
+           Ici vous pouvez choisir quelles visualisations lancer et filtrer dynamiquement les données.
+        </p>
       </div>
 
       <FilePicker />
 
-      {keysLoading ? <div className="card">Chargement des clés…</div> : null}
-      {keysError ? <div className="error">{keysError}</div> : null}
+      {keysLoading && (
+        <Card className="flex items-center gap-2 p-4">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Chargement des clés disponibles…</span>
+        </Card>
+      )}
+      
+      {keysError && (
+        <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            {keysError}
+        </div>
+      )}
 
-      <div className="grid cols-2">
-        <div className="card vstack">
-          <strong>Sélection des graphiques</strong>
-          <span className="small">Basé sur <code>/api/visualize/supported-keys</code>.</span>
-
-          {!supportedKeys ? null : (
-            <div className="vstack" style={{ gap: 10 }}>
-              {CATEGORY_ORDER.filter((c) => keysByCategory[c]?.length).map((cat) => (
-                <div key={cat} className="vstack" style={{ gap: 6 }}>
-                  <div className="hstack" style={{ justifyContent: 'space-between' }}>
-                    <strong style={{ fontSize: 13 }}>{cat}</strong>
-                    <span className="small">{keysByCategory[cat].length} clés</span>
-                  </div>
-                  <div className="vstack" style={{ gap: 6 }}>
-                    {keysByCategory[cat].map((k) => {
-                      const checked = selectedKeys.includes(k);
-                      return (
-                        <label key={k} className="hstack" style={{ gap: 10 }}>
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setSelectedKeys((prev) =>
-                                checked ? prev.filter((x) => x !== k) : [...prev, k],
-                              )
-                            }
-                          />
-                          <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace' }}>
-                            {k}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="hstack" style={{ justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap' }}>
-            <span className="small">Sélection: {selectedKeys.length} graphique(s)</span>
-            <button className="btn primary" type="button" disabled={!canRender} onClick={() => void runRender()}>
-              Générer
-            </button>
-          </div>
-          {!file ? <div className="small">Chargez un CSV pour activer la génération.</div> : null}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7">
+            <Card className="h-full flex flex-col">
+            <CardHeader>
+                <CardTitle>Sélection des graphiques</CardTitle>
+                <CardDescription>Basé sur <code>/api/visualize/supported-keys</code>.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow">
+                {!supportedKeys ? null : (
+                    <div className="space-y-6">
+                    {CATEGORY_ORDER.filter((c) => keysByCategory[c]?.length).map((cat) => (
+                        <div key={cat} className="space-y-3">
+                        <div className="flex items-center justify-between border-b pb-2">
+                            <h4 className="text-sm font-semibold">{cat}</h4>
+                            <Badge variant="secondary" className="text-xs">{keysByCategory[cat].length}</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {keysByCategory[cat].map((k) => {
+                            const checked = selectedKeys.includes(k);
+                            return (
+                                <div key={k} className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={k}
+                                    checked={checked}
+                                    onCheckedChange={(c) =>
+                                    setSelectedKeys((prev) =>
+                                        c === true ? [...prev, k] : prev.filter((x) => x !== k)
+                                    )
+                                    }
+                                />
+                                <SimpleLabel htmlFor={k} className="font-mono text-xs cursor-pointer">
+                                    {k}
+                                </SimpleLabel>
+                                </div>
+                            );
+                            })}
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+                )}
+            </CardContent>
+            <CardFooter className="flex flex-wrap items-center justify-between gap-4 border-t pt-6">
+                <span className="text-sm text-muted-foreground">Sélection: {selectedKeys.length} graphique(s)</span>
+                <Button onClick={() => void runRender()} disabled={!canRender}>
+                    <Play className="mr-2 h-4 w-4" />
+                    Générer
+                </Button>
+            </CardFooter>
+             {!file && <div className="px-6 pb-4 text-xs text-muted-foreground text-center">Chargez un CSV pour activer la génération.</div>}
+            </Card>
         </div>
 
-        <div className="card vstack">
-          <strong>Paramètres API</strong>
-          <span className="small">
-            Les champs sont envoyés comme <code>filters</code> et <code>config</code> (JSON) dans le multipart <code>FormData</code>.
-          </span>
-
-          <div className="vstack" style={{ gap: 8 }}>
-            <label className="vstack" style={{ gap: 6 }}>
-              <span className="small">filters (ex: {`{"Sexe":"F"}`})</span>
-              <textarea className="input" value={filtersText} onChange={(e) => setFiltersText(e.target.value)} />
-            </label>
-
-            <label className="vstack" style={{ gap: 6 }}>
-              <span className="small">config (dépend du graphique)</span>
-              <textarea className="input" value={configText} onChange={(e) => setConfigText(e.target.value)} />
-            </label>
-
-            <div className="small">
-              Conseils:
-              <ul style={{ margin: 0, paddingLeft: 18 }}>
-                <li>Pour segmentation, utilisez <code>segment_field</code> (si le graphique le supporte).</li>
-                <li>Pour les graphes "leviers", baissez/montez <code>min_n</code> selon votre niveau de rigueur.</li>
-              </ul>
-            </div>
-          </div>
+        <div className="lg:col-span-5">
+           <FilterBuilder file={file} onFiltersChange={setDynamicFilters} />
         </div>
       </div>
 
-      <div className="grid cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(renderByKey)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([k, st]) => (
@@ -261,26 +247,20 @@ export function HRPage() {
             />
           ))}
 
-        {file && supportedKeys && Object.keys(renderByKey).length === 0 ? (
-          <div className="card">
-            <strong>Prêt</strong>
-            <div className="small">Sélectionnez des graphiques puis cliquez sur “Générer”.</div>
-          </div>
-        ) : null}
+        {file && supportedKeys && Object.keys(renderByKey).length === 0 && (
+          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed col-span-full">
+             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary mb-4">
+                <Info className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold">Prêt à générer</h3>
+             <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+              Sélectionnez des graphiques et des filtres puis cliquez sur “Générer”.
+            </p>
+          </Card>
+        )}
       </div>
     </div>
   );
-}
-
-function parseJsonObject(text: string): Record<string, unknown> | null {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  const value = JSON.parse(trimmed) as unknown;
-  if (value === null) return null;
-  if (typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error('Expected a JSON object');
-  }
-  return value as Record<string, unknown>;
 }
 
 function formatVisualizeError(e: unknown): string {

@@ -203,6 +203,8 @@ textarea.input {
 /* Guard against collapsed renders (e.g. actions menu visible but plot area is 0px tall) */
 .vega-viewer {
     min-height: 260px;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .vega-viewer .vega-embed {

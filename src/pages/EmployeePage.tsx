@@ -16,18 +16,15 @@ export function EmployeePage() {
     {
       key: 'dimension_summary',
       title: 'Synthèse par dimension',
-      description: "Vue d'ensemble simple des scores par grande dimension.",
     },
     {
       key: 'action_priority_index',
       title: "Priorités d'action",
-      description: 'Les leviers les plus actionnables (heuristique: score bas + lien avec EPUI/ENG).',
       config: { top_n: 8, outcome: 'EPUI', method: 'spearman', min_n: 5 },
     },
     {
       key: 'likert_distribution',
-      title: 'Questions les plus problématiques',
-      description: 'Distribution des réponses Likert (centrée sur neutre).',
+      title: 'Répartition des réponses',
       config: { top_n: 12, focus: 'lowest', sort: 'net_agreement', interactive_dimension: true },
     },
   ];
@@ -42,9 +39,6 @@ export function EmployeePage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Employé</h1>
-        <p className="text-muted-foreground">
-          Cette page montre un état global et les actions prioritaires, sans jargon statistique.
-        </p>
       </div>
 
       <FilePicker />
@@ -67,9 +61,6 @@ export function EmployeePage() {
         <Card>
           <CardHeader>
             <CardTitle>Top 5 des actions prioritaires</CardTitle>
-            <CardDescription>
-                Basé sur le graphique "Priorités d'action" (heuristique). À lire comme un point de départ.
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <ol className="list-decimal pl-5 space-y-1">

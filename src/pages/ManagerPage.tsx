@@ -16,25 +16,22 @@ export function ManagerPage() {
     {
       key: 'importance_performance_matrix',
       title: 'Matrice importance–performance',
-      description: 'Pour identifier les sujets à prioriser (importance élevée, performance faible).',
       config: { outcome: 'EPUI', method: 'spearman', min_n: 5 },
     },
     {
       key: 'leverage_scatter',
       title: 'Carte des leviers',
-      description: "Visualise performance vs levier (association) sur l'issue (EPUI/ENG).",
       config: { outcome: 'EPUI', method: 'spearman', min_n: 5 },
     },
     {
       key: 'action_priority_index',
       title: "Priorités d'action (classement)",
-      description: 'Une shortlist prête à l’emploi, lisible en réunion.',
+      description: 'Les leviers les plus actionnables (heuristique: score bas + lien avec EPUI/ENG).',
       config: { top_n: 10, outcome: 'EPUI', method: 'spearman', min_n: 5 },
     },
     {
       key: 'dimension_ci_bars',
       title: 'Scores + incertitude (95% CI)',
-      description: 'Quand les écarts sont petits, les intervalles aident à éviter les fausses certitudes.',
     },
   ];
 
@@ -47,10 +44,7 @@ export function ManagerPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Manager</h1>
-        <p className="text-muted-foreground">
-          Cette page met en avant des graphiques compréhensibles et des recommandations automatiques pour guider les actions.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">Décideur</h1>
       </div>
 
       <FilePicker />
@@ -74,16 +68,12 @@ export function ManagerPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5 text-amber-500" />
-                <CardTitle>À retenir / prochaines actions</CardTitle>
+                <CardTitle>Top actions suggérées</CardTitle>
             </div>
-            <CardDescription>
-                Les indicateurs ci-dessous sont des heuristiques (corrélation ≠ causalité). Utilisez-les pour prioriser, puis confirmez par des échanges terrain.
-            </CardDescription>
           </CardHeader>
           <CardContent>
              {actions.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="text-sm font-semibold text-muted-foreground">Top actions suggérées</div>
                   <ol className="list-decimal pl-5 space-y-1">
                     {actions.map((a) => (
                       <li key={a.label} className="text-sm">

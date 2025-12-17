@@ -6,8 +6,8 @@ import { LayoutDashboard, Users, UserCheck } from 'lucide-react';
 export function Navbar() {
   const navItems = [
     { to: "/employee", label: "Employé", icon: UserCheck },
-    { to: "/manager", label: "Manager", icon: Users },
-    { to: "/hr", label: "RH", icon: LayoutDashboard },
+    { to: "/manager", label: "Décideur", icon: Users },
+    { to: "/hr", label: "Pilote", icon: LayoutDashboard },
   ];
 
   return (

@@ -154,10 +154,7 @@ export function HRPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">RH (exploration complète)</h1>
-        <p className="text-muted-foreground">
-           Ici vous pouvez choisir quelles visualisations lancer et filtrer dynamiquement les données.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">Pilote (exploration complète)</h1>
       </div>
 
       <FilePicker />
@@ -181,7 +178,6 @@ export function HRPage() {
             <Card className="h-full flex flex-col">
             <CardHeader>
                 <CardTitle>Sélection des graphiques</CardTitle>
-                <CardDescription>Basé sur <code>/api/visualize/supported-keys</code>.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
                 {!supportedKeys ? null : (

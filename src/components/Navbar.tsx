@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { DatasetStatus } from './DatasetStatus';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Users, UserCheck, Settings } from 'lucide-react';
 
 export function Navbar() {
   const navItems = [
@@ -39,6 +39,18 @@ export function Navbar() {
 
         <div className="ml-auto flex items-center space-x-4">
           <DatasetStatus />
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              cn(
+                "transition-colors hover:text-foreground/80",
+                isActive ? "text-foreground" : "text-foreground/60"
+              )
+            }
+            title="Paramètres & Données"
+          >
+            <Settings className="h-5 w-5" />
+          </NavLink>
         </div>
       </div>
     </header>

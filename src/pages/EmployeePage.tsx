@@ -1,4 +1,4 @@
-import { FilePicker } from '../components/FilePicker';
+import { Link } from 'react-router-dom';
 import { ChartCard } from '../components/ChartCard';
 import { useDataset } from '../context/DatasetContext';
 import { topActionPriorities } from '../lib/specUtils';
@@ -40,8 +40,6 @@ export function EmployeePage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Employé</h1>
       </div>
-
-      <FilePicker />
 
       {keysLoading && (
         <Card className="flex items-center gap-2 p-4">
@@ -94,7 +92,7 @@ export function EmployeePage() {
             </div>
             <h3 className="text-lg font-semibold">Choisissez un dataset</h3>
             <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Cliquez sur "Utiliser l'exemple (PROJET_POV)" pour charger le CSV fourni et générer les graphiques via l'API.
+              Rendez-vous dans les <Link to="/settings" className="underline font-medium text-primary">paramètres</Link> pour charger des données.
             </p>
           </Card>
         )}

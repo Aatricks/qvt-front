@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { ChartCard } from '../components/ChartCard';
-import { FilePicker } from '../components/FilePicker';
 import { FilterBuilder } from '../components/FilterBuilder';
 import { useDataset } from '../context/DatasetContext';
 import { getSupportedKeys, visualize } from '../lib/api';
@@ -157,8 +157,6 @@ export function HRPage() {
         <h1 className="text-3xl font-bold tracking-tight">Pilote (exploration complète)</h1>
       </div>
 
-      <FilePicker />
-
       {keysLoading && (
         <Card className="flex items-center gap-2 p-4">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -221,7 +219,11 @@ export function HRPage() {
                     Générer
                 </Button>
             </CardFooter>
-             {!file && <div className="px-6 pb-4 text-xs text-muted-foreground text-center">Chargez un CSV pour activer la génération.</div>}
+             {!file && (
+                <div className="px-6 pb-4 text-xs text-muted-foreground text-center">
+                    <Link to="/settings" className="underline font-medium text-primary">Chargez un CSV</Link> pour activer la génération.
+                </div>
+             )}
             </Card>
         </div>
 

@@ -14,13 +14,8 @@ export function EmployeePage() {
 
   const recommended: ChartJob[] = [
     {
-      key: 'dimension_summary',
-      title: 'Synthèse par dimension',
-    },
-    {
-      key: 'action_priority_index',
-      title: "Priorités d'action",
-      config: { top_n: 8, outcome: 'EPUI', method: 'spearman', min_n: 5 },
+      key: 'dimension_ci_bars',
+      title: 'Scores + incertitude (95% CI)',
     },
     {
       key: 'likert_distribution',
@@ -31,9 +26,6 @@ export function EmployeePage() {
 
   const jobs = (keys ? recommended.filter((j) => keys.includes(j.key)) : []).slice();
   const state = useCharts(file, jobs);
-
-  const actionSpec = state['action_priority_index']?.spec ?? null;
-  const actions = actionSpec ? topActionPriorities(actionSpec, 5) : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,7 +39,7 @@ export function EmployeePage() {
             <span className="text-sm text-muted-foreground">Chargement des visualisations disponibles…</span>
         </Card>
       )}
-      
+
       {keysError && (
         <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />
@@ -55,22 +47,6 @@ export function EmployeePage() {
         </div>
       )}
 
-      {file && actions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Top 5 des actions prioritaires</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal pl-5 space-y-1">
-              {actions.map((a) => (
-                <li key={a.label} className="text-sm">
-                  <span className="font-medium">{a.label}</span> <span className="text-muted-foreground text-xs">(score: {a.score.toFixed(3)})</span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {jobs.map((job) => (

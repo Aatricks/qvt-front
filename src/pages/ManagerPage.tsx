@@ -14,32 +14,18 @@ export function ManagerPage() {
 
   const curated: ChartJob[] = [
     {
-      key: 'importance_performance_matrix',
-      title: 'Matrice importance–performance',
-      config: { outcome: 'EPUI', method: 'spearman', min_n: 5 },
-    },
-    {
-      key: 'leverage_scatter',
-      title: 'Carte des leviers',
-      config: { outcome: 'EPUI', method: 'spearman', min_n: 5 },
-    },
-    {
-      key: 'action_priority_index',
-      title: "Priorités d'action (classement)",
-      description: 'Les leviers les plus actionnables (heuristique: score bas + lien avec EPUI/ENG).',
-      config: { top_n: 10, outcome: 'EPUI', method: 'spearman', min_n: 5 },
-    },
-    {
       key: 'dimension_ci_bars',
       title: 'Scores + incertitude (95% CI)',
+    },
+    {
+      key: 'likert_distribution',
+      title: 'Répartition des réponses',
+      config: { top_n: 12, focus: 'lowest', sort: 'net_agreement', interactive_dimension: true },
     },
   ];
 
   const jobs = (keys ? curated.filter((j) => keys.includes(j.key)) : []).slice();
   const state = useCharts(file, jobs);
-
-  const actionSpec = state['action_priority_index']?.spec ?? null;
-  const actions = actionSpec ? topActionPriorities(actionSpec, 6) : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -53,38 +39,12 @@ export function ManagerPage() {
             <span className="text-sm text-muted-foreground">Chargement des visualisations disponibles…</span>
         </Card>
       )}
-      
+
       {keysError && (
         <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />
             {keysError}
         </div>
-      )}
-
-      {file && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-amber-500" />
-                <CardTitle>Top actions suggérées</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-             {actions.length > 0 ? (
-                <div className="space-y-4">
-                  <ol className="list-decimal pl-5 space-y-1">
-                    {actions.map((a) => (
-                      <li key={a.label} className="text-sm">
-                        <span className="font-medium">{a.label}</span> <span className="text-muted-foreground text-xs">(score: {a.score.toFixed(3)})</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">Chargez un dataset pour calculer une shortlist d’actions.</div>
-              )}
-          </CardContent>
-        </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

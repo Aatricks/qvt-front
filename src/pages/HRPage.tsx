@@ -30,11 +30,6 @@ type RenderState = {
 const CATEGORY_ORDER = ['Décision / actions', 'Synthèse', 'Analyses', 'Temps', 'Autres'] as const;
 
 const KEY_CATEGORY: Record<string, (typeof CATEGORY_ORDER)[number]> = {
-  action_priority_index: 'Décision / actions',
-  leverage_scatter: 'Décision / actions',
-  importance_performance_matrix: 'Décision / actions',
-
-  dimension_summary: 'Synthèse',
   dimension_heatmap: 'Synthèse',
   dimension_boxplot: 'Synthèse',
   dimension_ci_bars: 'Synthèse',
@@ -58,11 +53,10 @@ export function HRPage() {
   const [keysLoading, setKeysLoading] = useState(false);
 
   const [selectedKeys, setSelectedKeys] = useState<string[]>([
-    'dimension_summary',
     'dimension_ci_bars',
     'likert_distribution',
-    'action_priority_index',
-    'importance_performance_matrix',
+    'anova_significance',
+    'correlation_matrix',
   ]);
 
   const [dynamicFilters, setDynamicFilters] = useState<Record<string, any>>({});

@@ -117,9 +117,11 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
             
             // 1. Banding
             if (row['Age']) newRow['AgeClasse'] = getAgeClasse(row['Age']);
-            const seniorityKey = row['Ancienneté'] ? 'Ancienneté' : (row['Ancienne'] ? 'Ancienne' : null);
-            if (seniorityKey) {
-                newRow['AnciennetéClasse'] = getSeniorityClasse(row[seniorityKey]);
+            
+            // Look for seniority using various possible keys
+            const rawSeniority = row['Ancienne'] ?? row['Ancienneté'] ?? row['ANCIENNE'] ?? row['ANCIENNETE'];
+            if (rawSeniority !== undefined && rawSeniority !== null) {
+                newRow['AnciennetéClasse'] = getSeniorityClasse(rawSeniority);
             }
 
             // 2. Dimensions

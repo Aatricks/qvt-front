@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2, AlertCircle, Info, Lightbulb } from 'lucide-react';
 
-// TODO: investigate what charts to recommend for managers
 export function ManagerPage() {
   const { file } = useDataset();
   const { keys, loading: keysLoading, error: keysError } = useSupportedKeys();

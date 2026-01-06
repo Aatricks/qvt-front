@@ -66,7 +66,7 @@ export function HRPage() {
     min_n: 5,
     outcome: 'EPUI',
     method: 'spearman',
-    top_n: 6,
+    top_n: 10,
     focus: 'lowest',
     sort: 'net_agreement',
   };
@@ -157,7 +157,7 @@ export function HRPage() {
             <span className="text-sm text-muted-foreground">Chargement des clés disponibles…</span>
         </Card>
       )}
-      
+
       {keysError && (
         <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />

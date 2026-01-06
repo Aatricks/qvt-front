@@ -1,10 +1,35 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import embed, { type Result as VegaEmbedResult } from 'vega-embed';
 
 import type { ChartSpec } from '../lib/types';
 
+/**
+ * Hook to detect if dark mode is active on the <html> element
+ */
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(() => 
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
 export function VegaViewer({ spec }: { spec: ChartSpec }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const isDarkMode = useIsDarkMode();
 
   // Defensive: the backend historically returns { chart_key, generated_at, spec: <vega-lite> }.
   // Even though the API client unwraps it, keep this as a safety net.
@@ -14,7 +39,7 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
     return inner && typeof inner === 'object' ? (inner as any) : (spec as any);
   }, [spec]);
 
-  // Keep options stable.
+  // Merge options with dynamic theme and background
   const options = useMemo(
     () => ({
       actions: {
@@ -24,8 +49,13 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
         editor: true,
       },
       renderer: 'canvas' as const,
+      theme: (isDarkMode ? 'dark' : 'default') as any,
+      config: {
+        background: 'transparent',
+        view: { fill: 'transparent', stroke: 'transparent' }
+      },
     }),
-    [],
+    [isDarkMode],
   );
 
   useEffect(() => {
@@ -65,7 +95,7 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
     };
   }, [resolvedSpec, options]);
 
-  return <div className="w-full overflow-x-auto min-h-[260px]" ref={containerRef} />;
+  return <div className="w-full overflow-x-auto min-h-[260px] bg-background" ref={containerRef} />;
 }
 
 function escapeHtml(text: string) {

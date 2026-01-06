@@ -6,6 +6,9 @@ import { ManagerPage } from './pages/ManagerPage';
 import { HRPage } from './pages/HRPage';
 import { SettingsPage } from './pages/SettingsPage';
 
+
+// TODO: add night mode toggle
+// TODO: remove transparency from navbar bg
 export default function App() {
   return (
     <Layout>

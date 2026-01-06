@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Loader2, AlertCircle, Info } from 'lucide-react';
 
+
+// TODO: investigate what charts to recommend for employees
 export function EmployeePage() {
   const { file } = useDataset();
   const { keys, loading: keysLoading, error: keysError } = useSupportedKeys();

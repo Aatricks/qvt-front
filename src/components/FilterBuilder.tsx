@@ -32,34 +32,58 @@ function isLikertColumn(col: string) {
 const VALUE_LABELS: Record<string, Record<string, string>> = {
   'Sexe': {
     '1': 'Homme',
-    '2': 'Femme'
+    '2': 'Femme',
+    '3': 'Autre'
   },
   'Contrat': {
     '1': 'CDI',
     '2': 'CDD',
-    '3': 'Autre/Intérim'
+    '3': 'Intérim'
   },
   'Temps': {
     '1': 'Temps plein',
     '2': 'Temps partiel'
   },
   'Encadre': {
-    '1': 'Non encadrant',
-    '2': 'Manager de proximité',
-    '3': 'Manager sup.'
+    '1': 'Non',
+    '2': 'Oui, en tant que cadre opérationnel',
+    '3': 'Oui, en tant que cadre dirigeant'
   },
   'Secteur': {
-    '1': 'Siège',
-    '2': 'Opérations',
-    '3': 'Support'
+    '1': 'Privé',
+    '2': 'Public',
+    '3': 'Associatif'
   },
   'TailleOr': {
-    '1': '< 50',
-    '2': '50-249',
-    '3': '250-999',
-    '4': '1000+'
+    '1': 'Moins de 10',
+    '2': 'De 11 à 49',
+    '3': 'De 50 à 249',
+    '4': 'De 250 à 499',
+    '5': '500 et plus'
   }
 };
+
+const LIKERT_PREFIXES = ['POV', 'PGC', 'CSA', 'EVPVP', 'RECO', 'COM', 'DL', 'PPD', 'JUST', 'PI', 'PD', 'ENG', 'EPUI'];
+
+function getAgeClasse(age: number | string): string {
+    const val = Number(age);
+    if (isNaN(val)) return 'N/A';
+    if (val <= 29) return 'Moins de 30 ans';
+    if (val <= 39) return '30-39 ans';
+    if (val <= 49) return '40-49 ans';
+    if (val <= 59) return '50-59 ans';
+    return '60 ans et plus';
+}
+
+function getSeniorityClasse(years: number | string): string {
+    const val = Number(years);
+    if (isNaN(val)) return 'N/A';
+    if (val <= 1) return "Moins d'un an";
+    if (val <= 5) return '1-5 ans';
+    if (val <= 10) return '6-10 ans';
+    if (val <= 20) return '11-20 ans';
+    return 'Plus de 20 ans';
+}
 
 export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
   const [data, setData] = useState<any[]>([]);
@@ -84,13 +108,46 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        const meta = results.meta;
-        if (meta.fields) {
-          setColumns(meta.fields);
-          setData(results.data);
-          setActiveFilters({});
-          onFiltersChange({});
-        }
+        const rawData = results.data as any[];
+        const fields = results.meta.fields || [];
+        
+        // Enrich data with banded columns and dimension averages
+        const enriched = rawData.map(row => {
+            const newRow = { ...row };
+            
+            // 1. Banding
+            if (row['Age']) newRow['AgeClasse'] = getAgeClasse(row['Age']);
+            const seniorityKey = row['Ancienneté'] ? 'Ancienneté' : (row['Ancienne'] ? 'Ancienne' : null);
+            if (seniorityKey) {
+                newRow['AnciennetéClasse'] = getSeniorityClasse(row[seniorityKey]);
+            }
+
+            // 2. Dimensions
+            LIKERT_PREFIXES.forEach(prefix => {
+                const items = fields.filter(f => f.toUpperCase().startsWith(prefix));
+                if (items.length > 0) {
+                    const values = items.map(i => Number(row[i])).filter(v => !isNaN(v) && v > 0);
+                    if (values.length > 0) {
+                        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                        newRow[`DIM_${prefix}`] = Math.round(avg).toString(); // Use rounded score for filtering
+                    }
+                }
+            });
+
+            return newRow;
+        });
+
+        const allFields = Array.from(new Set([
+            ...fields, 
+            'AgeClasse', 
+            'AnciennetéClasse', 
+            ...LIKERT_PREFIXES.map(p => `DIM_${p}`)
+        ])).filter(f => enriched.some(r => r[f] !== undefined));
+
+        setColumns(allFields);
+        setData(enriched);
+        setActiveFilters({});
+        onFiltersChange({});
         setLoading(false);
       },
       error: (err) => {
@@ -105,16 +162,13 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
     // 1. Filter the data based on active filters
     const filteredData = data.filter(row => {
       return Object.entries(activeFilters).every(([key, val]) => {
-        // Robust comparison: handle potential spaces
         return String(row[key] || '').trim() === val;
       });
     });
 
-    // 2. Calculate unique values for all columns based on the filtered subset
+    // 2. Calculate unique values
     const values: Record<string, Set<string>> = {};
-    columns.forEach(field => {
-      values[field] = new Set();
-    });
+    columns.forEach(field => { values[field] = new Set(); });
 
     filteredData.forEach(row => {
       columns.forEach(field => {
@@ -125,24 +179,29 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
       });
     });
 
-    // 3. Determine usable columns (low cardinality, > 1 option)
+    // 3. Filter valid columns: hide raw numeric ones if banded versions exist
+    const excludeRaw = new Set(['Age', 'Ancienne', 'Ancienneté']);
+    const isLikertRaw = (c: string) => /^[A-Z]{2,6}[0-9]$/.test(c);
+
     const validCols: string[] = [];
     const validValues: Record<string, string[]> = {};
 
     Object.keys(values).forEach(key => {
+      if (excludeRaw.has(key) || isLikertRaw(key)) return;
+      
       if (values[key].size > 0 && values[key].size < 50) {
          validCols.push(key);
-         validValues[key] = Array.from(values[key]).sort();
+         validValues[key] = Array.from(values[key]).sort((a, b) => {
+             // Numeric sort for scores
+             const na = Number(a), nb = Number(b);
+             if (!isNaN(na) && !isNaN(nb)) return na - nb;
+             return a.localeCompare(b);
+         });
       }
     });
 
-    // Sort columns alphabetically
     validCols.sort();
-
-    return { 
-      availableColumns: validCols, 
-      availableValuesForColumn: validValues 
-    };
+    return { availableColumns: validCols, availableValuesForColumn: validValues };
   }, [data, columns, activeFilters]);
 
   const addFilter = () => {
@@ -167,7 +226,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
     onFiltersChange({});
   };
 
-  // Group columns
+  // Group columns for UI
   const groups = useMemo(() => {
     const hr: string[] = [];
     const baro: string[] = [];
@@ -175,7 +234,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
     availableColumns
         .filter(col => !activeFilters[col])
         .forEach(col => {
-            if (isLikertColumn(col)) {
+            if (col.startsWith('DIM_')) {
                 baro.push(col);
             } else {
                 hr.push(col);
@@ -185,7 +244,14 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
     return { hr, baro };
   }, [availableColumns, activeFilters]);
 
-  // Get display label for a value
+  // Get display label for a value or column
+  const getDisplayColumn = (col: string) => {
+      if (col === 'AgeClasse') return 'Âge (tranche)';
+      if (col === 'AnciennetéClasse') return 'Ancienneté (tranche)';
+      if (col.startsWith('DIM_')) return col.replace('DIM_', '');
+      return col;
+  };
+
   const getDisplayValue = (col: string, val: string) => {
     return VALUE_LABELS[col]?.[val] || val;
   };
@@ -226,15 +292,15 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
                         <SelectGroup>
                             <SelectLabel>Facteurs RH</SelectLabel>
                             {groups.hr.map(col => (
-                                <SelectItem key={col} value={col}>{col}</SelectItem>
+                                <SelectItem key={col} value={col}>{getDisplayColumn(col)}</SelectItem>
                             ))}
                         </SelectGroup>
                     )}
                     {groups.baro.length > 0 && (
                         <SelectGroup>
-                            <SelectLabel>Baromètre</SelectLabel>
+                            <SelectLabel>Dimensions QVCT</SelectLabel>
                             {groups.baro.map(col => (
-                                <SelectItem key={col} value={col}>{col}</SelectItem>
+                                <SelectItem key={col} value={col}>{getDisplayColumn(col)}</SelectItem>
                             ))}
                         </SelectGroup>
                     )}
@@ -249,7 +315,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
                     disabled={!selectedColumn}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir une valeur" />
+                    <SelectValue placeholder="Valeur" />
                   </SelectTrigger>
                   <SelectContent>
                     {selectedColumn && availableValuesForColumn[selectedColumn]?.map(val => (
@@ -276,7 +342,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
                 <div className="flex flex-wrap gap-2 pt-2">
                 {Object.entries(activeFilters).map(([key, val]) => (
                     <Badge key={key} variant="secondary" className="flex items-center gap-1 px-3 py-1 text-sm font-normal">
-                    <span className="font-semibold">{key}:</span> {getDisplayValue(key, val)}
+                    <span className="font-semibold">{getDisplayColumn(key)}:</span> {getDisplayValue(key, val)}
                     <button 
                         onClick={() => removeFilter(key)}
                         className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20 focus:outline-none"
@@ -288,7 +354,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
                 </div>
             ) : (
                 <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded-md">
-                    Aucun filtre actif
+                    Filtrer par tranche d'âge, ancienneté ou dimension...
                 </div>
             )}
           </>

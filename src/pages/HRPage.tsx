@@ -66,7 +66,7 @@ export function HRPage() {
     min_n: 5,
     outcome: 'EPUI',
     method: 'spearman',
-    top_n: 12,
+    top_n: 6,
     focus: 'lowest',
     sort: 'net_agreement',
   };

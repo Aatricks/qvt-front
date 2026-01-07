@@ -207,8 +207,10 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
   }, [data, columns, activeFilters]);
 
   const addFilter = () => {
-    if (selectedColumn && selectedValue) {
-      const newFilters = { ...activeFilters, [selectedColumn]: selectedValue };
+    if (selectedColumn) {
+      // Allow adding a filter even if no value is selected (empty string)
+      // This will trigger the backend auto-comparison/faceting logic
+      const newFilters = { ...activeFilters, [selectedColumn]: selectedValue || '' };
       setActiveFilters(newFilters);
       onFiltersChange(newFilters);
       setSelectedColumn('');
@@ -331,7 +333,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
 
               <Button 
                 onClick={addFilter} 
-                disabled={!selectedColumn || !selectedValue}
+                disabled={!selectedColumn}
                 variant="secondary"
                 size="icon"
                 className="shrink-0"
@@ -344,7 +346,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
                 <div className="flex flex-wrap gap-2 pt-2">
                 {Object.entries(activeFilters).map(([key, val]) => (
                     <Badge key={key} variant="secondary" className="flex items-center gap-1 px-3 py-1 text-sm font-normal">
-                    <span className="font-semibold">{getDisplayColumn(key)}:</span> {getDisplayValue(key, val)}
+                    <span className="font-semibold">{getDisplayColumn(key)}:</span> {val ? getDisplayValue(key, val) : 'Toutes les modalités (comparaison)'}
                     <button 
                         onClick={() => removeFilter(key)}
                         className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20 focus:outline-none"

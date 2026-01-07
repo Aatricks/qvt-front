@@ -333,7 +333,7 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
 
               <Button 
                 onClick={addFilter} 
-                disabled={!selectedColumn}
+                disabled={!selectedColumn || (selectedColumn.startsWith('DIM_') && !selectedValue)}
                 variant="secondary"
                 size="icon"
                 className="shrink-0"

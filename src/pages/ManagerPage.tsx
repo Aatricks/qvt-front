@@ -15,7 +15,7 @@ export function ManagerPage() {
   const curated: ChartJob[] = [
     {
       key: 'dimension_ci_bars',
-      title: 'Scores + incertitude (95% CI)',
+      title: 'Scores + incertitude',
     },
     {
       key: 'likert_distribution',

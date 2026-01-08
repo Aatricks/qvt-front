@@ -47,9 +47,9 @@ export function Navbar() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[300px] left-0 translate-x-0 h-full">
-              <DialogTitle className="text-left">Menu</DialogTitle>
-              <nav className="flex flex-col space-y-4 mt-4">
+            <DialogContent className="sm:max-w-[300px] left-0 top-0 translate-x-0 translate-y-0 h-full flex flex-col justify-start">
+              <DialogTitle className="text-left border-b pb-4">Menu</DialogTitle>
+              <nav className="flex flex-col space-y-4 mt-6">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}

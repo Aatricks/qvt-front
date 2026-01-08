@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { DatasetStatus } from './DatasetStatus';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, UserCheck, Settings, Moon, Sun, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, UserCheck, Settings, Moon, Sun, Menu, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -31,14 +31,14 @@ export function Navbar() {
   };
 
   const navItems = [
-    { to: "/employee", label: "Employé", icon: UserCheck },
+    { to: "/employee", label: "Collaborateur", icon: UserCheck },
     { to: "/manager", label: "Décideur", icon: Users },
     { to: "/hr", label: "Pilote", icon: LayoutDashboard },
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="container flex h-14 items-center px-4 md:px-6">
         <div className="mr-4 flex md:hidden">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -47,9 +47,12 @@ export function Navbar() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[300px] left-0 top-0 translate-x-0 translate-y-0 h-full flex flex-col justify-start">
-              <DialogTitle className="text-left border-b pb-4">Menu</DialogTitle>
-              <nav className="flex flex-col space-y-4 mt-6">
+            <DialogContent className="sm:max-w-[300px] left-0 top-0 translate-x-0 translate-y-0 h-full flex flex-col justify-start p-6">
+              <DialogTitle className="text-left border-b pb-4 flex items-center gap-2 font-semibold">
+                <Activity className="h-5 w-5 text-primary" />
+                QVCT Dashboard
+              </DialogTitle>
+              <nav className="flex flex-col space-y-2 mt-6">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}
@@ -57,8 +60,10 @@ export function Navbar() {
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80",
-                        isActive ? "text-foreground" : "text-foreground/60"
+                        "flex items-center gap-3 text-sm font-medium transition-all px-3 py-2 rounded-md",
+                        isActive 
+                          ? "bg-secondary text-primary" 
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       )
                     }
                   >
@@ -71,23 +76,26 @@ export function Navbar() {
           </Dialog>
         </div>
 
-        <div className="mr-4 hidden md:flex">
-          <a className="mr-6 flex items-center space-x-2" href="/">
-            <span className="font-bold sm:inline-block">QVCTi</span>
-          </a>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
+        <div className="mr-8 hidden md:flex items-center">
+          <NavLink to="/" className="mr-6 flex items-center space-x-2 transition-opacity hover:opacity-90">
+            <Activity className="h-5 w-5 text-primary" />
+            <span className="text-lg font-bold tracking-tight text-foreground">QVCT<span className="font-light">i</span></span>
+          </NavLink>
+          <nav className="flex items-center space-x-1 text-sm font-medium">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    "transition-colors hover:text-foreground/80 flex items-center gap-2",
-                    isActive ? "text-foreground" : "text-foreground/60"
+                    "px-3 py-1.5 rounded-md transition-all flex items-center gap-2",
+                    isActive 
+                      ? "bg-secondary text-primary" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   )
                 }
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-3.5 w-3.5" />
                 {item.label}
               </NavLink>
             ))}
@@ -95,28 +103,26 @@ export function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center space-x-2">
+          <DatasetStatus />
+          <div className="h-4 w-px bg-border mx-1" />
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            title="Changer le thème"
-            className="h-9 w-9"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
-          <div className="h-6 w-px bg-border mx-1" />
-          <DatasetStatus />
           <NavLink
             to="/settings"
             className={({ isActive }) =>
               cn(
-                "transition-colors hover:text-foreground/80 flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent",
-                isActive ? "text-foreground" : "text-foreground/60"
+                "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+                isActive ? "bg-secondary text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )
             }
-            title="Paramètres & Données"
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-4 w-4" />
           </NavLink>
         </div>
       </div>

@@ -109,7 +109,7 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
 
   return (
     <div 
-      className="w-full min-h-[300px] flex items-center justify-center overflow-auto bg-card/50 rounded-md border border-dashed border-border/50" 
+      className="w-full h-full flex items-center justify-center overflow-auto" 
       ref={containerRef} 
     />
   );

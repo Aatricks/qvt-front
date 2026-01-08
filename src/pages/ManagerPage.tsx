@@ -1,56 +1,58 @@
 import { Link } from 'react-router-dom';
 import { ChartCard } from '../components/ChartCard';
 import { useDataset } from '../context/DatasetContext';
-import { topActionPriorities } from '../lib/specUtils';
 import { useCharts, useSupportedKeys } from '../lib/useCharts';
 import type { ChartJob } from '../lib/types';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Loader2, AlertCircle, Info, Lightbulb } from 'lucide-react';
+import { getChartMetadata } from '../lib/chartConfigs';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, AlertCircle, TrendingUp, Compass, Target, Info } from 'lucide-react';
 
 export function ManagerPage() {
   const { file } = useDataset();
   const { keys, loading: keysLoading, error: keysError } = useSupportedKeys();
 
-  const curated: ChartJob[] = [
-    {
-      key: 'dimension_ci_bars',
-      title: 'Scores + incertitude',
-    },
-    {
-      key: 'likert_distribution',
-      title: 'Répartition des réponses',
-      config: { top_n: 12, focus: 'lowest', sort: 'net_agreement', interactive_dimension: true },
-    },
-  ];
+  const curatedKeys = ['action_priority_index', 'dimension_ci_bars'];
 
-  const jobs = (keys ? curated.filter((j) => keys.includes(j.key)) : []).slice();
+  const jobs: ChartJob[] = (keys ? curatedKeys.filter((k) => keys.includes(k)) : []).map(k => {
+    const meta = getChartMetadata(k);
+    return {
+      key: k,
+      title: meta.title,
+      description: meta.description,
+      config: k === 'action_priority_index' ? { outcome: 'EPUI', top_n: 10 } : undefined
+    };
+  });
+
   const state = useCharts(file, jobs);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">Espace Décideur</h1>
-        <p className="text-muted-foreground text-lg">
-          Analysez les indicateurs clés pour orienter vos décisions stratégiques en matière de bien-être.
+    <div className="flex flex-col gap-8 pb-12">
+      <div className="flex flex-col gap-3 max-w-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Pilotage Stratégique QVCT</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Outils d'aide à la décision pour identifier les leviers d'amélioration et prioriser les actions correctives basées sur les données d'enquête.
         </p>
       </div>
 
       {keysLoading && (
-        <Card className="flex items-center gap-2 p-4">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Chargement des visualisations disponibles…</span>
-        </Card>
-      )}
-
-      {keysError && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4" />
-            {keysError}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+           {[1, 2].map(i => (
+              <Card key={i} className="h-[400px] flex items-center justify-center bg-muted/20 border-dashed border-2 animate-pulse">
+                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/20" />
+              </Card>
+           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {keysError && (
+        <div className="flex items-center gap-3 rounded-lg bg-destructive/5 border border-destructive/10 p-4 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <p className="text-sm font-medium">{keysError}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {jobs.map((job) => (
           <ChartCard
             key={job.key}
@@ -59,34 +61,55 @@ export function ManagerPage() {
             status={state[job.key]?.status ?? (file ? 'loading' : 'idle')}
             error={state[job.key]?.error}
             spec={state[job.key]?.spec}
-            footer={<Badge variant="secondary" className="font-mono text-xs">{job.key}</Badge>}
+            footer={
+                <div className="flex items-center justify-between w-full opacity-70">
+                     <span className="font-medium">Indicateur de Performance Sociale</span>
+                     <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded uppercase">{job.key}</code>
+                </div>
+            }
           />
         ))}
 
         {!file && (
-           <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary mb-4">
-                <Info className="h-6 w-6 text-muted-foreground" />
+           <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 bg-muted/10 min-h-[400px] col-span-full">
+            <div className="h-12 w-12 rounded-lg bg-background flex items-center justify-center shadow-sm border mb-6">
+                <Compass className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">Choisissez un dataset</h3>
-            <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Rendez-vous dans les <Link to="/settings" className="underline font-medium text-primary">paramètres</Link> pour générer les visuels à partir du CSV.
+            <h3 className="text-lg font-semibold mb-2">Analyse non disponible</h3>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-8">
+              Veuillez importer un jeu de données valide dans le module de configuration pour activer les outils de pilotage.
             </p>
+            <Link to="/settings">
+                <Button variant="outline" className="px-6">Configurer les données</Button>
+            </Link>
           </Card>
         )}
+      </div>
 
-        {file && keys && jobs.length === 0 && (
-          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary mb-4">
-                <AlertCircle className="h-6 w-6 text-muted-foreground" />
+      <div className="bg-muted/30 border rounded-lg overflow-hidden">
+         <div className="px-6 py-4 border-b bg-muted/50 flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">Guide d'Interprétation</h3>
+         </div>
+         <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="space-y-3">
+                <div className="h-7 w-7 rounded border flex items-center justify-center bg-white text-xs font-bold shadow-sm">01</div>
+                <h4 className="text-sm font-semibold">Matrices de Priorité</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">Les dimensions situées dans le quadrant supérieur gauche combinent des scores de satisfaction faibles avec une forte corrélation à l'épuisement.</p>
             </div>
-            <h3 className="text-lg font-semibold">Aucune visualisation manager disponible</h3>
-             <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Essayez la page RH pour explorer toutes les clés supportées.
-            </p>
-          </Card>
-        )}
+            <div className="space-y-3">
+                <div className="h-7 w-7 rounded border flex items-center justify-center bg-white text-xs font-bold shadow-sm">02</div>
+                <h4 className="text-sm font-semibold">Significativité</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">L'intervalle de confiance reflète la précision statistique. Des barres étroites indiquent une convergence des réponses des collaborateurs.</p>
+            </div>
+            <div className="space-y-3">
+                <div className="h-7 w-7 rounded border flex items-center justify-center bg-white text-xs font-bold shadow-sm">03</div>
+                <h4 className="text-sm font-semibold">Évolutions</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">Croisez ces résultats avec les analyses de l'Espace Pilote pour identifier si ces tendances sont spécifiques à certaines directions.</p>
+            </div>
+         </div>
       </div>
     </div>
   );
 }
+

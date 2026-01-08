@@ -7,11 +7,13 @@ import { useDataset } from '../context/DatasetContext';
 import { getSupportedKeys, visualize } from '../lib/api';
 import type { ChartSpec } from '../lib/types';
 import { VisualizeError } from '../lib/types';
+import { getChartMetadata } from '../lib/chartConfigs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertCircle, Info, Play } from 'lucide-react';
+import { Loader2, AlertCircle, Play, BarChart2, Info, LayoutPanelTop } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type RenderState = {
   status: 'idle' | 'loading' | 'success' | 'error';
@@ -20,23 +22,6 @@ type RenderState = {
 };
 
 const CATEGORY_ORDER = ['Décision / actions', 'Synthèse', 'Analyses', 'Temps', 'Autres'] as const;
-
-const KEY_CATEGORY: Record<string, (typeof CATEGORY_ORDER)[number]> = {
-  action_priority_index: 'Décision / actions',
-  dimension_heatmap: 'Synthèse',
-  dimension_boxplot: 'Synthèse',
-  dimension_ci_bars: 'Synthèse',
-  likert_distribution: 'Synthèse',
-  likert_item_heatmap: 'Synthèse',
-  demographic_distribution: 'Synthèse',
-
-  anova_significance: 'Analyses',
-  correlation_matrix: 'Analyses',
-  scatter_regression: 'Analyses',
-
-  time_series: 'Temps',
-  time_series_ci: 'Temps',
-};
 
 export function HRPage() {
   const { file } = useDataset();
@@ -97,10 +82,13 @@ export function HRPage() {
     const keys = supportedKeys ?? [];
     const out: Record<string, string[]> = {};
     for (const k of keys) {
-      const cat = KEY_CATEGORY[k] ?? 'Autres';
+      const meta = getChartMetadata(k);
+      const cat = meta.category;
       (out[cat] ??= []).push(k);
     }
-    for (const cat of Object.keys(out)) out[cat].sort();
+    for (const cat of Object.keys(out)) {
+       out[cat].sort((a, b) => getChartMetadata(a).title.localeCompare(getChartMetadata(b).title));
+    }
     return out;
   }, [supportedKeys]);
 
@@ -140,114 +128,159 @@ export function HRPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">Espace Pilote (RH)</h1>
-        <p className="text-muted-foreground text-lg">
-          Explorez l'intégralité des données, appliquez des filtres avancés et générez des rapports détaillés.
+    <div className="flex flex-col gap-8 pb-12">
+      <div className="flex flex-col gap-3 max-w-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Espace Pilote</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Exploration granulaire des données QVCT. Croisez les indicateurs avec les variables de segmentation et générez des rapports statistiques détaillés.
         </p>
       </div>
 
       {keysLoading && (
-        <Card className="flex items-center gap-2 p-4">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Chargement des clés disponibles…</span>
-        </Card>
-      )}
-
-      {keysError && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4" />
-            {keysError}
+        <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/30">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Synchronisation des capacités du moteur d'analyse...</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-7">
-            <Card className="h-full flex flex-col shadow-sm">
-            <CardHeader>
-                <CardTitle>Sélection des graphiques</CardTitle>
-                <CardDescription>Choisissez les indicateurs à visualiser</CardDescription>
+      {keysError && (
+        <div className="flex items-center gap-3 rounded-lg bg-destructive/5 border border-destructive/10 p-4 text-sm text-destructive font-medium">
+            <AlertCircle className="h-4 w-4" />
+            <span>Échec de connexion au service d'analyse : {keysError}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        <div className="xl:col-span-8">
+            <Card className="shadow-sm border-border overflow-hidden bg-card">
+            <CardHeader className="border-b bg-muted/20">
+                <div className="flex items-center gap-2">
+                    <LayoutPanelTop className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">Répertoire des Indicateurs</CardTitle>
+                </div>
             </CardHeader>
-            <CardContent className="flex-grow">
-                {!supportedKeys ? null : (
-                    <div className="space-y-6">
+            <CardContent className="py-6">
+                {!supportedKeys ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-50">
+                        <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                        <p className="text-xs font-medium uppercase tracking-widest">Initialisation</p>
+                    </div>
+                ) : (
+                    <div className="space-y-8">
                     {CATEGORY_ORDER.filter((c) => keysByCategory[c]?.length).map((cat) => (
-                        <div key={cat} className="space-y-3">
-                        <div className="flex items-center justify-between border-b pb-2">
-                            <h4 className="text-sm font-semibold text-primary">{cat}</h4>
-                            <Badge variant="secondary" className="text-xs">{keysByCategory[cat].length}</Badge>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {keysByCategory[cat].map((k) => {
-                            const checked = selectedKeys.includes(k);
-                            return (
-                                <div key={k} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent/50 transition-colors">
-                                <Checkbox
-                                    id={k}
-                                    checked={checked}
-                                    onCheckedChange={(c) =>
-                                    setSelectedKeys((prev) =>
-                                        c === true ? [...prev, k] : prev.filter((x) => x !== k)
-                                    )
-                                    }
-                                />
-                                <label htmlFor={k} className="font-mono text-xs cursor-pointer flex-grow text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    {k}
-                                </label>
-                                </div>
-                            );
-                            })}
-                        </div>
+                        <div key={cat} className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{cat}</h4>
+                                <div className="h-px flex-grow bg-border" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {keysByCategory[cat].map((k) => {
+                                const meta = getChartMetadata(k);
+                                const checked = selectedKeys.includes(k);
+                                return (
+                                    <div 
+                                        key={k} 
+                                        onClick={() => setSelectedKeys(prev => checked ? prev.filter(x => x !== k) : [...prev, k])}
+                                        className={cn(
+                                            "flex items-start space-x-3 p-3 rounded-md border transition-all cursor-pointer group",
+                                            checked 
+                                                ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20" 
+                                                : "border-border bg-background hover:border-primary/20 hover:bg-primary/[0.02] hover:shadow-sm"
+                                        )}
+                                    >
+                                        <Checkbox
+                                            id={k}
+                                            checked={checked}
+                                            className={cn("mt-0.5 transition-colors", checked && "border-primary bg-primary")}
+                                            onCheckedChange={(c) =>
+                                                setSelectedKeys((prev) =>
+                                                    c === true ? [...prev, k] : prev.filter((x) => x !== k)
+                                                )
+                                            }
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                        <div className="flex flex-col gap-0.5">
+                                            <label 
+                                                htmlFor={k} 
+                                                className="text-xs font-semibold leading-tight cursor-pointer group-hover:text-primary transition-colors"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {meta.title}
+                                            </label>
+                                            <p className="text-[10px] text-muted-foreground leading-normal line-clamp-1 group-hover:text-muted-foreground/80 transition-colors">
+                                                {meta.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                                })}
+                            </div>
                         </div>
                     ))}
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="flex flex-wrap items-center justify-between gap-4 border-t bg-muted/30 pt-6">
-                <span className="text-sm font-medium">Sélection: {selectedKeys.length} graphique(s)</span>
-                <Button onClick={() => void runRender()} disabled={!canRender} size="lg" className="px-8 shadow-sm">
-                    <Play className="mr-2 h-4 w-4" />
-                    Générer les visuels
+            <CardFooter className="flex items-center justify-between border-t bg-muted/10 p-4">
+                <div className="text-xs text-muted-foreground">
+                    <span className="font-bold text-foreground">{selectedKeys.length}</span> indicateurs sélectionnés
+                </div>
+                <Button 
+                    onClick={() => void runRender()} 
+                    disabled={!canRender} 
+                    className="h-9 px-6 font-semibold shadow-sm"
+                >
+                    <Play className="mr-2 h-3.5 w-3.5 fill-current" />
+                    Lancer l'Analyse
                 </Button>
             </CardFooter>
-             {!file && (
-                <div className="px-6 pb-4 text-xs text-muted-foreground text-center">
-                    <Link to="/settings" className="underline font-medium text-primary hover:text-primary/80">Chargez un CSV</Link> pour activer la génération.
-                </div>
-             )}
             </Card>
+            {!file && (
+                <div className="mt-4 p-4 border rounded-lg bg-orange-50/50 dark:bg-orange-950/10 border-orange-200 dark:border-orange-900/30 flex items-center gap-3">
+                    <Info className="h-4 w-4 text-orange-600 shrink-0" />
+                    <p className="text-xs font-medium text-orange-800 dark:text-orange-400">
+                        Données absentes. Veuillez charger un <Link to="/settings" className="underline font-bold">fichier source</Link> pour activer la génération.
+                    </p>
+                </div>
+            )}
         </div>
 
-        <div className="lg:col-span-5">
+        <div className="xl:col-span-4 sticky top-20">
            <FilterBuilder file={file} onFiltersChange={setDynamicFilters} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        {Object.entries(renderByKey)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([k, st]) => (
-            <ChartCard
-              key={k}
-              title={k}
-              status={st.status}
-              error={st.error}
-              spec={st.spec}
-            />
-          ))}
-
-        {file && supportedKeys && Object.keys(renderByKey).length === 0 && (
-          <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 col-span-full bg-muted/20">
-             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary mb-6">
-                <Info className="h-8 w-8 text-muted-foreground" />
+      <div className="mt-8 space-y-8">
+        {Object.entries(renderByKey).length > 0 && (
+            <div className="flex items-center gap-4">
+                <h2 className="text-lg font-bold">Sorties d'Analyse</h2>
+                <div className="h-px flex-grow bg-border" />
+                <Badge variant="outline" className="font-mono text-[10px]">{Object.keys(renderByKey).length} Modules</Badge>
             </div>
-            <h3 className="text-xl font-bold">Prêt à générer</h3>
-             <p className="text-muted-foreground mt-2 max-w-sm">
-              Sélectionnez les graphiques souhaités et appliquez vos filtres, puis cliquez sur le bouton “Générer les visuels”.
-            </p>
-          </Card>
         )}
+
+        <div className="grid grid-cols-1 gap-8">
+            {Object.entries(renderByKey)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, st]) => {
+                const meta = getChartMetadata(k);
+                return (
+                <ChartCard
+                    key={k}
+                    title={meta.title}
+                    subtitle={meta.description}
+                    status={st.status}
+                    error={st.error}
+                    spec={st.spec}
+                    footer={
+                        <div className="flex items-center justify-between w-full uppercase tracking-wider font-bold">
+                            <span className="text-primary/70">{meta.category}</span>
+                            <span className="opacity-40">{k}</span>
+                        </div>
+                    }
+                />
+                );
+            })}
+        </div>
       </div>
     </div>
   );

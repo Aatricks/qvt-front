@@ -1,93 +1,107 @@
 import { Link } from 'react-router-dom';
 import { ChartCard } from '../components/ChartCard';
 import { useDataset } from '../context/DatasetContext';
-import { topActionPriorities } from '../lib/specUtils';
 import { useCharts, useSupportedKeys } from '../lib/useCharts';
 import type { ChartJob } from '../lib/types';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Loader2, AlertCircle, Info } from 'lucide-react';
+import { getChartMetadata } from '../lib/chartConfigs';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, AlertCircle, Info, PieChart } from 'lucide-react';
 
 export function EmployeePage() {
   const { file } = useDataset();
   const { keys, loading: keysLoading, error: keysError } = useSupportedKeys();
 
-  const recommended: ChartJob[] = [
-    {
-      key: 'dimension_ci_bars',
-      title: 'Scores + incertitude',
-    },
-    {
-      key: 'likert_distribution',
-      title: 'Répartition des réponses',
-      config: { top_n: 12, focus: 'lowest', sort: 'net_agreement', interactive_dimension: true },
-    },
-  ];
+  const recommendedKeys = ['dimension_ci_bars', 'likert_distribution'];
 
-  const jobs = (keys ? recommended.filter((j) => keys.includes(j.key)) : []).slice();
+  const jobs: ChartJob[] = (keys ? recommendedKeys.filter((k) => keys.includes(k)) : []).map(k => {
+    const meta = getChartMetadata(k);
+    return {
+      key: k,
+      title: meta.title,
+      description: meta.description,
+      config: k === 'likert_distribution' ? { top_n: 12, focus: 'lowest', sort: 'net_agreement', interactive_dimension: true } : undefined
+    };
+  });
+
   const state = useCharts(file, jobs);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">Espace Employé</h1>
-        <p className="text-muted-foreground text-lg">
-          Consultez les résultats anonymisés de l'enquête QVCT pour votre organisation.
+    <div className="flex flex-col gap-8 pb-12">
+      <div className="flex flex-col gap-3 max-w-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Synthèse Collaborateur</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Indicateurs de Qualité de Vie et Conditions au Travail (QVCT). Ces visualisations reflètent la perception globale de l'organisation de manière anonymisée.
         </p>
       </div>
 
       {keysLoading && (
-        <Card className="flex items-center gap-2 p-4">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Chargement des visualisations disponibles…</span>
-        </Card>
-      )}
-
-      {keysError && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4" />
-            {keysError}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+           {[1, 2].map(i => (
+              <Card key={i} className="h-[400px] flex items-center justify-center bg-muted/30 border-dashed border-2 animate-pulse">
+                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/30" />
+              </Card>
+           ))}
         </div>
       )}
 
+      {keysError && (
+        <div className="flex items-center gap-3 rounded-lg bg-destructive/5 border border-destructive/10 p-4 text-destructive font-medium text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <p>{keysError}</p>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {jobs.map((job) => (
           <ChartCard
-            key={job.key}
-            title={job.title}
-            subtitle={job.description}
-            status={state[job.key]?.status ?? (file ? 'loading' : 'idle')}
-            error={state[job.key]?.error}
-            spec={state[job.key]?.spec}
-            footer={<Badge variant="secondary" className="font-mono text-xs">{job.key}</Badge>}
+              key={job.key}
+              title={job.title}
+              subtitle={job.description}
+              status={state[job.key]?.status ?? (file ? 'loading' : 'idle')}
+              error={state[job.key]?.error}
+              spec={state[job.key]?.spec}
+              footer={
+                  <div className="flex items-center justify-between w-full opacity-70">
+                       <span className="font-medium">Indicateur Organisationnel</span>
+                       <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded uppercase">{job.key}</code>
+                  </div>
+              }
           />
         ))}
 
         {!file && (
-          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary mb-4">
+          <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 bg-muted/10 min-h-[400px] col-span-full">
+            <div className="h-12 w-12 rounded-lg bg-background flex items-center justify-center shadow-sm border mb-6">
                 <Info className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">Choisissez un dataset</h3>
-            <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Rendez-vous dans les <Link to="/settings" className="underline font-medium text-primary">paramètres</Link> pour charger des données.
+            <h3 className="text-lg font-semibold mb-2">Données non chargées</h3>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-8">
+              L'accès aux indicateurs nécessite l'importation préalable d'un jeu de données source.
             </p>
-          </Card>
-        )}
-
-        {file && keys && jobs.length === 0 && (
-          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary mb-4">
-                <AlertCircle className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold">Aucune visualisation recommandée</h3>
-             <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Les clés supportées par le backend ne correspondent pas aux recommandations pour cette page.
-            </p>
+            <Link to="/settings">
+                <Button className="px-6 font-semibold">
+                    Importer un dataset
+                </Button>
+            </Link>
           </Card>
         )}
       </div>
+      
+      {file && jobs.length > 0 && (
+          <div className="bg-secondary/50 rounded-lg p-6 border flex items-start gap-4">
+              <div className="h-10 w-10 rounded-md bg-white border shadow-sm flex items-center justify-center shrink-0">
+                  <PieChart className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-1">
+                  <h4 className="text-sm font-semibold">Analyses Détaillées</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Pour explorer les segmentations démographiques ou les corrélations statistiques, veuillez consulter les modules <Link to="/manager" className="text-primary hover:underline font-medium">Décideur</Link> ou <Link to="/hr" className="text-primary hover:underline font-medium">Pilote</Link>.</p>
+              </div>
+          </div>
+      )}
     </div>
   );
 }
+
+
+

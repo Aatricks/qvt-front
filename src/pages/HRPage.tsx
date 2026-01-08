@@ -30,6 +30,7 @@ type RenderState = {
 const CATEGORY_ORDER = ['Décision / actions', 'Synthèse', 'Analyses', 'Temps', 'Autres'] as const;
 
 const KEY_CATEGORY: Record<string, (typeof CATEGORY_ORDER)[number]> = {
+  action_priority_index: 'Décision / actions',
   dimension_heatmap: 'Synthèse',
   dimension_boxplot: 'Synthèse',
   dimension_ci_bars: 'Synthèse',
@@ -57,6 +58,7 @@ export function HRPage() {
     'likert_distribution',
     'anova_significance',
     'correlation_matrix',
+    'action_priority_index',
   ]);
 
   const [dynamicFilters, setDynamicFilters] = useState<Record<string, any>>({});
@@ -148,7 +150,7 @@ export function HRPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Pilote (exploration complète)</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Pilote</h1>
       </div>
 
       {keysLoading && (

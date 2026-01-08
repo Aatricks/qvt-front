@@ -29,7 +29,7 @@ export function ManagerPage() {
   return (
     <div className="flex flex-col gap-8 pb-12">
       <div className="flex flex-col gap-3 max-w-3xl">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Pilotage Stratégique QVCT</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Espace Décideur</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Outils d'aide à la décision pour identifier les leviers d'amélioration et prioriser les actions correctives basées sur les données d'enquête.
         </p>
@@ -112,4 +112,3 @@ export function ManagerPage() {
     </div>
   );
 }
-

@@ -182,16 +182,16 @@ export function HRPage() {
                                         key={k} 
                                         onClick={() => setSelectedKeys(prev => checked ? prev.filter(x => x !== k) : [...prev, k])}
                                         className={cn(
-                                            "flex items-start space-x-3 p-3 rounded-md border transition-all cursor-pointer group",
+                                            "flex items-start space-x-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer group relative overflow-hidden",
                                             checked 
-                                                ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20" 
-                                                : "border-border bg-background hover:border-primary/20 hover:bg-primary/[0.02] hover:shadow-sm"
+                                                ? "border-primary bg-primary/5 ring-1 ring-primary/10 shadow-sm" 
+                                                : "border-border bg-background hover:border-primary/30 hover:bg-primary/[0.01] hover:shadow-md hover:-translate-y-0.5"
                                         )}
                                     >
                                         <Checkbox
                                             id={k}
                                             checked={checked}
-                                            className={cn("mt-0.5 transition-colors", checked && "border-primary bg-primary")}
+                                            className={cn("mt-0.5 transition-all duration-300", checked ? "border-primary bg-primary scale-110" : "group-hover:border-primary/50")}
                                             onCheckedChange={(c) =>
                                                 setSelectedKeys((prev) =>
                                                     c === true ? [...prev, k] : prev.filter((x) => x !== k)

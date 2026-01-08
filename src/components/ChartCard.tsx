@@ -85,19 +85,19 @@ export function ChartCard({
                     <Maximize2 className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-5xl w-[95vw] md:w-[85vw] border-none bg-background/40 backdrop-blur-2xl shadow-2xl rounded-3xl p-0 overflow-hidden ring-1 ring-white/10">
-                  <div className="flex flex-col h-full max-h-[90vh]">
-                    <DialogHeader className="p-8 pb-4 space-y-2 border-b border-white/5 bg-white/5">
+                <DialogContent className="max-w-6xl w-auto min-w-[50vw] h-auto max-h-[94vh] border-none bg-background/40 backdrop-blur-3xl shadow-2xl rounded-[2rem] p-0 overflow-hidden ring-1 ring-white/10 flex flex-col">
+                  <div className="flex flex-col h-full overflow-hidden">
+                    <DialogHeader className="p-8 pb-4 space-y-2 border-b border-white/5 bg-white/5 shrink-0">
                       <DialogTitle className="text-xl font-bold tracking-tight">{title}</DialogTitle>
-                      {subtitle && <DialogDescription className="text-sm text-muted-foreground/80 leading-relaxed">{subtitle}</DialogDescription>}
+                      {subtitle && <DialogDescription className="text-sm text-muted-foreground/80 leading-relaxed max-w-3xl">{subtitle}</DialogDescription>}
                     </DialogHeader>
-                    <div className="flex-grow p-10 flex items-center justify-center min-h-[500px]">
-                      <div className="w-full h-full">
+                    <div className="flex-grow p-6 md:p-10 flex items-center justify-center overflow-auto min-h-[350px]">
+                      <div className="w-full flex justify-center">
                         <VegaViewer spec={spec!} />
                       </div>
                     </div>
                     {footer && (
-                        <div className="px-8 py-4 bg-white/5 border-t border-white/5 text-[10px] text-muted-foreground/60 uppercase tracking-widest font-bold">
+                        <div className="px-8 py-4 bg-white/5 border-t border-white/5 text-[10px] text-muted-foreground/60 uppercase tracking-widest font-bold flex items-center justify-between shrink-0">
                             {footer}
                         </div>
                     )}

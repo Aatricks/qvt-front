@@ -3,9 +3,6 @@ import embed, { type Result as VegaEmbedResult } from 'vega-embed';
 
 import type { ChartSpec } from '../lib/types';
 
-/**
- * Hook to detect if dark mode is active on the <html> element
- */
 function useIsDarkMode() {
   const [isDark, setIsDark] = useState(() => 
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false
@@ -30,24 +27,49 @@ function useIsDarkMode() {
 export function VegaViewer({ spec }: { spec: ChartSpec }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDarkMode = useIsDarkMode();
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  // Defensive: the backend historically returns { chart_key, generated_at, spec: <vega-lite> }.
-  // Even though the API client unwraps it, keep this as a safety net.
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width, height });
+      }
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const resolvedSpec = useMemo(() => {
     const s = spec as unknown as Record<string, unknown>;
     const inner = s && typeof s === 'object' ? (s as any).spec : null;
     return inner && typeof inner === 'object' ? (inner as any) : (spec as any);
   }, [spec]);
 
-  // Merge options with dynamic theme and background
   const options = useMemo(
     () => ({
-      actions: true,
+      actions: {
+        export: { svg: true, png: true },
+        source: false,
+        compiled: false,
+        editor: false,
+      },
       renderer: 'canvas' as const,
       theme: (isDarkMode ? 'dark' : 'default') as any,
       config: {
         background: 'transparent',
-        view: { fill: 'transparent', stroke: 'transparent' }
+        view: { fill: 'transparent', stroke: 'transparent' },
+        axis: {
+            labelFontSize: 10,
+            titleFontSize: 11,
+        },
+        legend: {
+            labelFontSize: 10,
+            titleFontSize: 11,
+        }
       },
     }),
     [isDarkMode],
@@ -58,39 +80,32 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
     let canceled = false;
 
     async function run() {
-      if (!containerRef.current) return;
+      if (!containerRef.current || dimensions.width === 0) return;
       
-      // Clean up previous
-      containerRef.current.innerHTML = '<div class="flex flex-col items-center gap-2"><div class="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div><span class="text-[10px] text-muted-foreground uppercase tracking-widest">Génération...</span></div>';
-
       try {
         if (!resolvedSpec || Object.keys(resolvedSpec).length === 0) {
-            throw new Error('Specification vide ou invalide');
+            throw new Error('Spécification invalide');
         }
 
-        // Try to embed with simple options. 
         const specToRender = { ...resolvedSpec };
         
-        // Ensure some basic sizing if not present
-        if (!specToRender.width && !specToRender.vconcat && !specToRender.hconcat) {
+        // Dynamic sizing logic
+        const isConcat = !!(specToRender.vconcat || specToRender.hconcat || specToRender.facet);
+        
+        if (!isConcat) {
+            specToRender.width = dimensions.width - 80; // Account for axis/padding
+            specToRender.autosize = { type: 'fit', contains: 'padding' };
+        } else {
+            // For concatenated charts, we can't easily force total width
+            // but we can try to make sub-charts fill
             specToRender.width = 'container';
-        }
-        if (!specToRender.height && !specToRender.vconcat && !specToRender.hconcat) {
-            specToRender.height = 300;
         }
 
         result = await embed(containerRef.current, specToRender, options);
       } catch (e) {
         if (!containerRef.current || canceled) return;
-        const msg = e instanceof Error ? e.message : String(e);
         console.error('Vega Error:', e);
-        containerRef.current.innerHTML = `<div class="p-6 text-center">
-          <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-          <p class="text-xs font-semibold text-destructive uppercase tracking-wider mb-1">Erreur de rendu</p>
-          <p class="text-[11px] text-muted-foreground max-w-[200px] mx-auto">${escapeHtml(msg)}</p>
-        </div>`;
+        containerRef.current.innerHTML = `<div class="p-4 text-center opacity-50"><p class="text-[10px] font-medium uppercase tracking-tighter">Erreur de rendu</p></div>`;
       }
     }
 
@@ -105,21 +120,19 @@ export function VegaViewer({ spec }: { spec: ChartSpec }) {
         } catch {}
       }
     };
-  }, [resolvedSpec, options]);
+  }, [resolvedSpec, options, dimensions.width]);
 
   return (
     <div 
-      className="w-full h-full flex items-center justify-center overflow-auto" 
+      className="w-full h-full flex items-center justify-center overflow-hidden min-h-[300px]" 
       ref={containerRef} 
-    />
+    >
+        {dimensions.width === 0 && (
+            <div className="flex flex-col items-center gap-4 opacity-20">
+                <div className="h-24 w-48 bg-muted rounded animate-pulse" />
+                <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+            </div>
+        )}
+    </div>
   );
-}
-
-function escapeHtml(text: string) {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 }

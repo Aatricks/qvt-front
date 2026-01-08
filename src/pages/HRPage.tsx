@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ChartCard } from '../components/ChartCard';
@@ -12,14 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertCircle, Info, Play } from 'lucide-react';
-
-// Add Label component locally if not present or just use simple label
-const SimpleLabel = ({ className, children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-    <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`} {...props}>
-        {children}
-    </label>
-);
-
 
 type RenderState = {
   status: 'idle' | 'loading' | 'success' | 'error';
@@ -148,9 +140,12 @@ export function HRPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Pilote</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">Espace Pilote (RH)</h1>
+        <p className="text-muted-foreground text-lg">
+          Explorez l'intégralité des données, appliquez des filtres avancés et générez des rapports détaillés.
+        </p>
       </div>
 
       {keysLoading && (
@@ -167,11 +162,12 @@ export function HRPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-7">
-            <Card className="h-full flex flex-col">
+            <Card className="h-full flex flex-col shadow-sm">
             <CardHeader>
                 <CardTitle>Sélection des graphiques</CardTitle>
+                <CardDescription>Choisissez les indicateurs à visualiser</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
                 {!supportedKeys ? null : (
@@ -179,14 +175,14 @@ export function HRPage() {
                     {CATEGORY_ORDER.filter((c) => keysByCategory[c]?.length).map((cat) => (
                         <div key={cat} className="space-y-3">
                         <div className="flex items-center justify-between border-b pb-2">
-                            <h4 className="text-sm font-semibold">{cat}</h4>
+                            <h4 className="text-sm font-semibold text-primary">{cat}</h4>
                             <Badge variant="secondary" className="text-xs">{keysByCategory[cat].length}</Badge>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {keysByCategory[cat].map((k) => {
                             const checked = selectedKeys.includes(k);
                             return (
-                                <div key={k} className="flex items-center space-x-2">
+                                <div key={k} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent/50 transition-colors">
                                 <Checkbox
                                     id={k}
                                     checked={checked}
@@ -196,9 +192,9 @@ export function HRPage() {
                                     )
                                     }
                                 />
-                                <SimpleLabel htmlFor={k} className="font-mono text-xs cursor-pointer">
+                                <label htmlFor={k} className="font-mono text-xs cursor-pointer flex-grow text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                     {k}
-                                </SimpleLabel>
+                                </label>
                                 </div>
                             );
                             })}
@@ -208,16 +204,16 @@ export function HRPage() {
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="flex flex-wrap items-center justify-between gap-4 border-t pt-6">
-                <span className="text-sm text-muted-foreground">Sélection: {selectedKeys.length} graphique(s)</span>
-                <Button onClick={() => void runRender()} disabled={!canRender}>
+            <CardFooter className="flex flex-wrap items-center justify-between gap-4 border-t bg-muted/30 pt-6">
+                <span className="text-sm font-medium">Sélection: {selectedKeys.length} graphique(s)</span>
+                <Button onClick={() => void runRender()} disabled={!canRender} size="lg" className="px-8 shadow-sm">
                     <Play className="mr-2 h-4 w-4" />
-                    Générer
+                    Générer les visuels
                 </Button>
             </CardFooter>
              {!file && (
                 <div className="px-6 pb-4 text-xs text-muted-foreground text-center">
-                    <Link to="/settings" className="underline font-medium text-primary">Chargez un CSV</Link> pour activer la génération.
+                    <Link to="/settings" className="underline font-medium text-primary hover:text-primary/80">Chargez un CSV</Link> pour activer la génération.
                 </div>
              )}
             </Card>
@@ -228,7 +224,7 @@ export function HRPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {Object.entries(renderByKey)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([k, st]) => (
@@ -242,13 +238,13 @@ export function HRPage() {
           ))}
 
         {file && supportedKeys && Object.keys(renderByKey).length === 0 && (
-          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed col-span-full">
-             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary mb-4">
-                <Info className="h-6 w-6 text-muted-foreground" />
+          <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 col-span-full bg-muted/20">
+             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary mb-6">
+                <Info className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">Prêt à générer</h3>
-             <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Sélectionnez des graphiques et des filtres puis cliquez sur “Générer”.
+            <h3 className="text-xl font-bold">Prêt à générer</h3>
+             <p className="text-muted-foreground mt-2 max-w-sm">
+              Sélectionnez les graphiques souhaités et appliquez vos filtres, puis cliquez sur le bouton “Générer les visuels”.
             </p>
           </Card>
         )}

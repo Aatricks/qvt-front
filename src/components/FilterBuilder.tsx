@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Papa from 'papaparse';
 import { Plus, X, Filter } from 'lucide-react';
 
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 interface FilterBuilderProps {
   file: File | null;
@@ -263,104 +264,123 @@ export function FilterBuilder({ file, onFiltersChange }: FilterBuilderProps) {
   if (!file) return null;
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-3">
+    <Card className="h-full shadow-sm">
+      <CardHeader className="pb-3 border-b bg-muted/20">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                <CardTitle className="text-lg">Filtres dynamiques</CardTitle>
+                <div className="bg-primary/10 p-2 rounded-md">
+                    <Filter className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                    <CardTitle className="text-lg">Filtres dynamiques</CardTitle>
+                    <p className="text-xs text-muted-foreground font-normal">Affinez l'analyse en temps réel</p>
+                </div>
             </div>
             {Object.keys(activeFilters).length > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive transition-colors">
                     Tout effacer
                 </Button>
             )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 pt-6">
         {loading ? (
-           <div className="text-sm text-muted-foreground">Analyse du fichier...</div>
+           <div className="flex items-center justify-center py-8 text-sm text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Analyse du fichier...
+           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex-1 min-w-[140px]">
-                <Select value={selectedColumn} onValueChange={(val) => {
-                    setSelectedColumn(val);
-                    setSelectedValue('');
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir une colonne" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups.hr.length > 0 && (
-                        <SelectGroup>
-                            <SelectLabel>Facteurs RH</SelectLabel>
-                            {groups.hr.map(col => (
-                                <SelectItem key={col} value={col}>{getDisplayColumn(col)}</SelectItem>
-                            ))}
-                        </SelectGroup>
-                    )}
-                    {groups.baro.length > 0 && (
-                        <SelectGroup>
-                            <SelectLabel>Dimensions QVCT</SelectLabel>
-                            {groups.baro.map(col => (
-                                <SelectItem key={col} value={col}>{getDisplayColumn(col)}</SelectItem>
-                            ))}
-                        </SelectGroup>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-3 p-4 rounded-lg bg-accent/30 border border-accent">
+              <div className="flex flex-col gap-3">
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-none">Dimension</label>
+                    <Select value={selectedColumn} onValueChange={(val) => {
+                        setSelectedColumn(val);
+                        setSelectedValue('');
+                    }}>
+                    <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Choisir une colonne" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {groups.hr.length > 0 && (
+                            <SelectGroup>
+                                <SelectLabel>Facteurs RH</SelectLabel>
+                                {groups.hr.map(col => (
+                                    <SelectItem key={col} value={col}>{getDisplayColumn(col)}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        )}
+                        {groups.baro.length > 0 && (
+                            <SelectGroup>
+                                <SelectLabel>Dimensions QVCT</SelectLabel>
+                                {groups.baro.map(col => (
+                                    <SelectItem key={col} value={col}>{getDisplayColumn(col)}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        )}
+                    </SelectContent>
+                    </Select>
+                </div>
 
-              <div className="flex-1 min-w-[140px]">
-                <Select 
-                    value={selectedValue} 
-                    onValueChange={setSelectedValue}
-                    disabled={!selectedColumn}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Valeur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedColumn && availableValuesForColumn[selectedColumn]?.map(val => (
-                      <SelectItem key={val} value={val}>
-                          {getDisplayValue(selectedColumn, val)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-none">Valeur</label>
+                    <div className="flex gap-2">
+                        <Select 
+                            value={selectedValue} 
+                            onValueChange={setSelectedValue}
+                            disabled={!selectedColumn}
+                        >
+                        <SelectTrigger className="bg-background flex-grow">
+                            <SelectValue placeholder={selectedColumn ? "Toutes (comparaison)" : "Choisir une colonne d'abord"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {selectedColumn && availableValuesForColumn[selectedColumn]?.map(val => (
+                            <SelectItem key={val} value={val}>
+                                {getDisplayValue(selectedColumn, val)}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
 
-              <Button 
-                onClick={addFilter} 
-                disabled={!selectedColumn || (selectedColumn.startsWith('DIM_') && !selectedValue)}
-                variant="secondary"
-                size="icon"
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+                        <Button 
+                            onClick={addFilter} 
+                            disabled={!selectedColumn || (selectedColumn.startsWith('DIM_') && !selectedValue)}
+                            variant="default"
+                            size="icon"
+                            className="shrink-0 shadow-sm"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+              </div>
             </div>
 
-            {Object.keys(activeFilters).length > 0 ? (
-                <div className="flex flex-wrap gap-2 pt-2">
-                {Object.entries(activeFilters).map(([key, val]) => (
-                    <Badge key={key} variant="secondary" className="flex items-center gap-1 px-3 py-1 text-sm font-normal">
-                    <span className="font-semibold">{getDisplayColumn(key)}:</span> {val ? getDisplayValue(key, val) : 'Toutes les modalités (comparaison)'}
-                    <button 
-                        onClick={() => removeFilter(key)}
-                        className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20 focus:outline-none"
-                    >
-                        <X className="h-3 w-3" />
-                    </button>
-                    </Badge>
-                ))}
-                </div>
-            ) : (
-                <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded-md">
-                    Filtrer par tranche d'âge, ancienneté ou dimension...
-                </div>
-            )}
+            <div className="space-y-3">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-none">Filtres actifs</label>
+                {Object.keys(activeFilters).length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                    {Object.entries(activeFilters).map(([key, val]) => (
+                        <Badge key={key} variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border shadow-sm">
+                        <span className="text-primary font-bold">{getDisplayColumn(key)}</span>
+                        <span className="text-muted-foreground mx-0.5">|</span>
+                        <span>{val ? getDisplayValue(key, val) : 'Comparaison'}</span>
+                        <button 
+                            onClick={() => removeFilter(key)}
+                            className="ml-1 rounded-full p-0.5 hover:bg-destructive/10 hover:text-destructive focus:outline-none transition-colors"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                        </Badge>
+                    ))}
+                    </div>
+                ) : (
+                    <div className="text-xs text-muted-foreground/60 text-center py-6 border border-dashed rounded-lg bg-muted/10">
+                        Aucun filtre appliqué. Utilisez les sélecteurs ci-dessus pour affiner les résultats.
+                    </div>
+                )}
+            </div>
           </>
         )}
       </CardContent>

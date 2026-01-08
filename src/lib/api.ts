@@ -56,9 +56,14 @@ export async function visualize(
 function unwrapSpec(json: unknown): ChartSpec {
   if (json && typeof json === 'object') {
     const obj = json as Record<string, unknown>;
-    const inner = obj.spec;
+    // Check various common wrapper keys
+    const inner = obj.spec ?? obj.chart ?? obj.vega_lite_spec;
     if (inner && typeof inner === 'object') {
       return inner as ChartSpec;
+    }
+    // If it's already a spec (has $schema or mark)
+    if (obj['$schema'] || obj['mark'] || obj['vconcat'] || obj['hconcat'] || obj['layer'] || obj['facet']) {
+        return obj as ChartSpec;
     }
   }
   return json as ChartSpec;

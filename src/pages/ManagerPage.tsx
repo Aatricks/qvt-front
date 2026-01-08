@@ -28,9 +28,12 @@ export function ManagerPage() {
   const state = useCharts(file, jobs);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Décideur</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">Espace Décideur</h1>
+        <p className="text-muted-foreground text-lg">
+          Analysez les indicateurs clés pour orienter vos décisions stratégiques en matière de bien-être.
+        </p>
       </div>
 
       {keysLoading && (

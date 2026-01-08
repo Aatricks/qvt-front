@@ -28,9 +28,12 @@ export function EmployeePage() {
   const state = useCharts(file, jobs);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Employé</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">Espace Employé</h1>
+        <p className="text-muted-foreground text-lg">
+          Consultez les résultats anonymisés de l'enquête QVCT pour votre organisation.
+        </p>
       </div>
 
       {keysLoading && (

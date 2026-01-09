@@ -66,6 +66,19 @@
   }
 }
 
+/* Ensure Vega-Lite charts are centered */
+.vega-embed {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.vega-embed summary {
+  display: none !important;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -16,8 +16,20 @@ export const CHART_METADATA: Record<string, ChartMetadata> = {
   dimension_ci_bars: {
     key: 'dimension_ci_bars',
     title: 'Scores par dimension',
-    description: 'Moyennes des scores par dimension avec intervalle de confiance à 95%.',
+    description: 'Moyennes des scores par dimension avec écart-type (dispersion).',
     category: 'Synthèse',
+  },
+  dimension_mean_std_scatter: {
+    key: 'dimension_mean_std_scatter',
+    title: 'Moyenne vs Dispersion',
+    description: 'Analyse la relation entre le score moyen et la dispersion (écart-type) pour chaque dimension.',
+    category: 'Analyses',
+  },
+  clustering_profile: {
+    key: 'clustering_profile',
+    title: 'Segmentation automatique',
+    description: 'Identifie des groupes de collaborateurs aux profils de réponse similaires par segmentation automatique (clustering).',
+    category: 'Analyses',
   },
   likert_distribution: {
     key: 'likert_distribution',

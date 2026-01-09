@@ -87,21 +87,6 @@ export function EmployeePage() {
           </Card>
         )}
       </div>
-      
-      {file && jobs.length > 0 && (
-          <div className="bg-secondary/50 rounded-lg p-6 border flex items-start gap-4">
-              <div className="h-10 w-10 rounded-md bg-white border shadow-sm flex items-center justify-center shrink-0">
-                  <PieChart className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-1">
-                  <h4 className="text-sm font-semibold">Analyses Détaillées</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Pour explorer les segmentations démographiques ou les corrélations statistiques, veuillez consulter les modules <Link to="/manager" className="text-primary hover:underline font-medium">Décideur</Link> ou <Link to="/hr" className="text-primary hover:underline font-medium">Pilote</Link>.</p>
-              </div>
-          </div>
-      )}
     </div>
   );
 }
-
-
-

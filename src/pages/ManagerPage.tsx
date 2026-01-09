@@ -91,21 +91,16 @@ export function ManagerPage() {
             <Target className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Guide d'Interprétation</h3>
          </div>
-         <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+         <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-3">
                 <div className="h-7 w-7 rounded border flex items-center justify-center bg-white text-xs font-bold shadow-sm">01</div>
                 <h4 className="text-sm font-semibold">Matrices de Priorité</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Les dimensions situées dans le quadrant supérieur gauche combinent des scores de satisfaction faibles avec une forte corrélation à l'épuisement.</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Les dimensions situées dans le quadrant supérieur gauche combinent des scores de pratiques faibles avec une forte corrélation à l'épuisement.</p>
             </div>
             <div className="space-y-3">
                 <div className="h-7 w-7 rounded border flex items-center justify-center bg-white text-xs font-bold shadow-sm">02</div>
                 <h4 className="text-sm font-semibold">Significativité</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">L'intervalle de confiance reflète la précision statistique. Des barres étroites indiquent une convergence des réponses des collaborateurs.</p>
-            </div>
-            <div className="space-y-3">
-                <div className="h-7 w-7 rounded border flex items-center justify-center bg-white text-xs font-bold shadow-sm">03</div>
-                <h4 className="text-sm font-semibold">Évolutions</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Croisez ces résultats avec les analyses de l'Espace Pilote pour identifier si ces tendances sont spécifiques à certaines directions.</p>
             </div>
          </div>
       </div>

@@ -52,7 +52,7 @@ export const CHART_METADATA: Record<string, ChartMetadata> = {
   demographic_distribution: {
     key: 'demographic_distribution',
     title: 'Profil démographique',
-    description: 'Répartition de la population répondante selon les variables signalétiques.',
+    description: 'Répartition de la population répondante selon les indicateurs démographiques.',
     category: 'Synthèse',
   },
   dimension_heatmap: {
